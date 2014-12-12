@@ -1,0 +1,15 @@
+-Add proper makefile
+-Add scheduling framework
+-Add compilation option and linkage
+-Add textutal description of pipeline?
+
+Kernels
+-----------------------------------
+- Color space conversion YUV-=> RGB
+- Output Histogram to file
+- max3, min3 - utils
+- Blurring kernels
+- random image - utils
+- subsampling
+- sobel - use separable representation
+- gaussian pyramid

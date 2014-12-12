@@ -1,0 +1,7 @@
+An image source index.
+
+NAME                          |  TYPE  |  SOURCE
+======================================================================================================================
+rgb.png                       |  RGB   |  Halide github
+valve_original_wikipedia.PNG  |  GRAY  |  http://upload.wikimedia.org/wikipedia/commons/f/f0/Valve_original_%281%29.PNG
+bikesgray-wikipedia.png       |  RGB   |  http://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg
