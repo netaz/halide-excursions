@@ -22,7 +22,6 @@ Halide::Func rotate(Halide::Func input, int height) {
 
 void sobel_example() {
     Halide::Var x,y,c;
-    // Image from: 
     Halide::Image<uint8_t> sobel_input = load<uint8_t>("images/bikesgray-wikipedia.png");
     Halide::Func sobel_padded;
     sobel_padded(x,y) = sobel_input(clamp(x, 0, sobel_input.width()-1),
@@ -45,7 +44,7 @@ void sobel_example() {
     // Described in http://patrick-fuller.com/gradients-image-processing-for-scientists-and-engineers-part-3/
     Halide::RDom r(sobel_input);
      
-    Halide::Func maxpix, minpix, luminosity, mag, luminosity_fn_uint8, mag_uint8;
+    Halide::Func maxpix, minpix, luminosity, mag, mag_uint8;
 
     // calculate the {min,max} luminosity values of the original grayscale image
     Halide::Image<int32_t> max_out, min_out;
@@ -54,17 +53,44 @@ void sobel_example() {
     minpix(0) = min(sobel_input(r.x, r.y), minpix(0));
     max_out = maxpix.realize(1);
     min_out = minpix.realize(1);
-    
+
     // calculate the magnitude of Gx, Gy
     mag = magnitude(sobel.first, sobel.second);
     // scale the magnitude by the luminosity range 
     luminosity(x,y) = 255.0f * ((mag(x,y)-min_out(0)) / (max_out(0)-min_out(0)));
-    luminosity_fn_uint8(x,y) = AS_UINT8(luminosity(x,y));
-    luminosity_fn_uint8.realize(sobel_output);
+    TO_2D_UINT8_LAMBDA(luminosity).realize(sobel_output);
     save(sobel_output, "output/sobel_mag.png");
 
     printf("%s DONE\n", __func__);
 }
+
+void prewitt_example() {
+    Halide::Var x,y,c;
+    Halide::Image<uint8_t> input = load<uint8_t>("images/bikesgray-wikipedia.png");
+    Halide::Func padded;
+    padded(x,y) = input(clamp(x, 0, input.width()-1), clamp(y, 0, input.height()-1));
+
+    Halide::Image<uint8_t> output(input.width(), input.height());
+
+    // calculate the horizontal and vertical gradients (GX, Gy)
+    std::pair<Halide::Func, Halide::Func> prewitt = prewitt_3x3(padded, true);
+    Halide::Func Gx, Gy, mag;
+    Gx(x,y) = AS_UINT8(prewitt.first(x,y));
+    Gx.realize(output);
+    save(output, "output/prewitt_gx.png");
+
+    Gy(x,y) = AS_UINT8(prewitt.second(x,y));
+    Gy.realize(output);
+    save(output, "output/prewitt_gy.png");
+
+    // calculate the magnitude of Gx, Gy
+    mag = magnitude(prewitt.first, prewitt.second);
+    TO_2D_UINT8_LAMBDA(mag).realize(output);
+    save(output, "output/prewitt_mag.png");
+
+    printf("%s DONE\n", __func__);
+}
+
 
 const char* const TEST_OUTPUT = "output";
 void openvx_example(Halide::Image<uint8_t> input) {
@@ -154,6 +180,7 @@ int main(int argc, char **argv) {
     Halide::Image<uint8_t> cv_input = load<uint8_t>("images/bikesgray-wikipedia.png");
     cv_example(cv_input);
     sobel_example();
+    prewitt_example();
 
     return 0;
 }
