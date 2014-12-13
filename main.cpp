@@ -22,15 +22,17 @@ Halide::Func rotate(Halide::Func input, int height) {
 
 void sobel_example() {
     Halide::Var x,y,c;
-    Halide::Image<uint8_t> sobel_input = load<uint8_t>("images/bikesgray-wikipedia.png");
-    Halide::Func sobel_padded;
-    sobel_padded(x,y) = sobel_input(clamp(x, 0, sobel_input.width()-1),
-                                    clamp(y, 0, sobel_input.height()-1));
+    Halide::Image<uint8_t> input = load<uint8_t>("images/bikesgray-wikipedia.png");
+    Halide::Func padded;
+    padded(x,y) = input(clamp(x, 0, input.width()-1), clamp(y, 0, input.height()-1));
 
-    Halide::Image<uint8_t> sobel_output(sobel_input.width(), sobel_input.height());
+    Halide::Image<uint8_t> sobel_output(input.width(), input.height());
+
+    // smooth the image
+    // Halide::Func gaussian = gaussian_3x3(padded, true);
 
     // calculate the horizontal and vertical gradients (GX, Gy)
-    std::pair<Halide::Func, Halide::Func> sobel = sobel_3x3(sobel_padded, true);
+    std::pair<Halide::Func, Halide::Func> sobel = sobel_3x3(padded, true);
     Halide::Func Gx, Gy;
     Gx(x,y) = AS_UINT8(sobel.first(x,y));
     Gx.realize(sobel_output);
@@ -42,20 +44,20 @@ void sobel_example() {
 
     // Calculate gradient magnitudes and scale them to image intensity 
     // Described in http://patrick-fuller.com/gradients-image-processing-for-scientists-and-engineers-part-3/
-    Halide::RDom r(sobel_input);
+    Halide::RDom r(input);
      
     Halide::Func maxpix, minpix, luminosity, mag, mag_uint8;
 
     // calculate the {min,max} luminosity values of the original grayscale image
     Halide::Image<int32_t> max_out, min_out;
     maxpix(x) = 0; minpix(x) = 0;
-    maxpix(0) = max(sobel_input(r.x, r.y), maxpix(0));
-    minpix(0) = min(sobel_input(r.x, r.y), minpix(0));
+    maxpix(0) = max(input(r.x, r.y), maxpix(0));
+    minpix(0) = min(input(r.x, r.y), minpix(0));
     max_out = maxpix.realize(1);
     min_out = minpix.realize(1);
 
     // calculate the magnitude of Gx, Gy
-    mag = magnitude(sobel.first, sobel.second);
+    mag = grad_magnitude(sobel.first, sobel.second);
     // scale the magnitude by the luminosity range 
     luminosity(x,y) = 255.0f * ((mag(x,y)-min_out(0)) / (max_out(0)-min_out(0)));
     TO_2D_UINT8_LAMBDA(luminosity).realize(sobel_output);
@@ -84,13 +86,12 @@ void prewitt_example() {
     save(output, "output/prewitt_gy.png");
 
     // calculate the magnitude of Gx, Gy
-    mag = magnitude(prewitt.first, prewitt.second);
+    mag = grad_magnitude(prewitt.first, prewitt.second);
     TO_2D_UINT8_LAMBDA(mag).realize(output);
     save(output, "output/prewitt_mag.png");
 
     printf("%s DONE\n", __func__);
 }
-
 
 const char* const TEST_OUTPUT = "output";
 void openvx_example(Halide::Image<uint8_t> input) {
@@ -163,24 +164,48 @@ void cv_example(Halide::Image<uint8_t> input) {
     printf("%s DONE\n", __func__);
 }
 
+void canny_example() {
+    Halide::Image<uint8_t> input = load<uint8_t>("images/bikesgray-wikipedia.png");
+    Halide::Image<uint8_t> output(input.width(), input.height(), 3);
+    Halide::Var x,y,c;
+    Halide::Func padded;
+    padded(x,y) = input(clamp(x, 0, input.width()-1), clamp(y, 0, input.height()-1));
+
+    Halide::Func canny = canny_detector(padded, true);
+
+    // color-code
+    Halide::Func color("color");
+    color(x,y,c) = 0;
+    //color(x,y,0) = select( canny(x,y) == DIRECTION_45UP || canny(x,y) == DIRECTION_45DOWN, 255, 0);
+    //color(x,y,1) = select( canny(x,y) == DIRECTION_VERTICAL, 255, 0);
+    color(x,y,2) = select( canny(x,y) == DIRECTION_HORIZONTAL, 255, 0);
+
+    lambda(x,y,c,Halide::cast<uint8_t>(min(color(x,y,c), 255))).realize(output);
+    save(output, "output/canny.png");
+
+    printf("%s DONE\n", __func__);
+}
+
+
 int main(int argc, char **argv) {
 
-    Halide::Image<uint8_t> input = load<uint8_t>("images/rgb.png");
-    Halide::RDom r(input);
-    Halide::Func producer;
-    Halide::Var x,y,c;
-    producer(x,y,c) = input(x,y,c);
+    // Halide::Image<uint8_t> input = load<uint8_t>("images/rgb.png");
+    // Halide::RDom r(input);
+    // Halide::Func producer;
+    // Halide::Var x,y,c;
+    // producer(x,y,c) = input(x,y,c);
 
-    Halide::Func invert_fn = invert<uint8_t>(producer, r);
-    Halide::Image<uint8_t> output = invert_fn.realize(input.width(), input.height(), input.channels());
-    save(output, "output/invert.png");
+    // Halide::Func invert_fn = invert<uint8_t>(producer, r);
+    // Halide::Image<uint8_t> output = invert_fn.realize(input.width(), input.height(), input.channels());
+    // save(output, "output/invert.png");
 
-    openvx_example(input);
+    // openvx_example(input);
 
-    Halide::Image<uint8_t> cv_input = load<uint8_t>("images/bikesgray-wikipedia.png");
-    cv_example(cv_input);
-    sobel_example();
-    prewitt_example();
+    // Halide::Image<uint8_t> cv_input = load<uint8_t>("images/bikesgray-wikipedia.png");
+    // cv_example(cv_input);
+    // sobel_example();
+    // prewitt_example();
+    canny_example();
 
     return 0;
 }
