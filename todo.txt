@@ -1,10 +1,14 @@
+Infrastructure
+-----------------------------------
 -Add proper makefile
 -Add scheduling framework
 -Add compilation option and linkage
 -Add textutal description of pipeline?
+-Add debugging framework
 
-Kernels
+
 -----------------------------------
+- rename kernel directory (it doesn't contain only kernels)
 - Color space conversion YUV-=> RGB
 - Output Histogram to file
 - max3, min3 - utils
@@ -13,3 +17,14 @@ Kernels
 - subsampling
 - sobel - use separable representation
 - gaussian pyramid
+- mean, median, alpha trimmed mean (http://www.librow.com/articles/article-7) filters
+- 90 degree rotation
+- Dirac Delta filter, b-spline, Lanczos filter, bicubic
+- MCT
+- noise reduction
+- edge detection (canny)
+- non-maximum suppression
+- sobel 5x5 (https://www.khronos.org/registry/vx/specs/1.0/html/d7/d71/group__group__vision__function__canny.html)
+- sobel 7x7 (https://www.khronos.org/registry/vx/specs/1.0/html/d7/d71/group__group__vision__function__canny.html)
+
+Do separable filters perform as well when separated and not-separated (in Halide)? If not, then the claim for algorithm-scheduling independence is false.
