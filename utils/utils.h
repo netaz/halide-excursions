@@ -4,6 +4,8 @@
 #include "Halide.h"
 #include "stdio.h"
 
+#define AS_UINT8(expr) (Halide::cast<uint8_t>(min(expr, 255)))
+
 // TODO: this function assumes printf is used for user i/o
 template <typename T>
 void dump_test_img(Halide::Image<T> &img) {

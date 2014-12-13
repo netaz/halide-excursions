@@ -13,35 +13,6 @@
 using Halide::Image;
 #include "utils/image_io.h"
 
-bool random_musings() {
-    Halide::Var x,y;
-    const int WIDTH = 10;
-    const int LENGTH = 10;
-
-    Image<int32_t> input(WIDTH, LENGTH);
-    randomize(input);
-    dump_test_img(input);
-
-    Halide::Image<int32_t> output;
-    
-    Halide::Func hist("hist");
-    Halide::RDom r(input);
-    hist(x) = 0;
-    hist(clamp(input(r.x, r.y)/4, 0, 24)) += 1;
-    
-    output = hist.realize(25);
-    dump_test_img(output);
-
-    Halide::Func maxxx("maxxx");
-    maxxx(x) = 0;
-    maxxx(0) = max(input(r.x, r.y), maxxx(0));
-    output = maxxx.realize(1);
-    printf("%d\n", output(0));
-
-    assert(output(0) == verify_max(input));
-    return true;
-}
-
 Halide::Func rotate(Halide::Func input, int height) {
     Halide::Func rot;
     Halide::Var x,y;
@@ -59,36 +30,40 @@ void sobel_example() {
 
     Halide::Image<uint8_t> sobel_output(sobel_input.width(), sobel_input.height());
 
+    // calculate the horizontal and vertical gradients (GX, Gy)
     std::pair<Halide::Func, Halide::Func> sobel = sobel_3x3(sobel_padded, true);
-    Halide::Func gx, gy;
-    gx(x,y) = Halide::cast<uint8_t>(sobel.first(x,y));
-    gx.realize(sobel_output);
+    Halide::Func Gx, Gy;
+    Gx(x,y) = AS_UINT8(sobel.first(x,y));
+    Gx.realize(sobel_output);
     save(sobel_output, "output/sobel_gx.png");
 
-    gy(x,y) = Halide::cast<uint8_t>(sobel.second(x,y));
-    gy.realize(sobel_output);
+    Gy(x,y) = AS_UINT8(sobel.second(x,y));
+    Gy.realize(sobel_output);
     save(sobel_output, "output/sobel_gy.png");
 
+    // Calculate gradient magnitudes and scale them to image intensity 
+    // Described in http://patrick-fuller.com/gradients-image-processing-for-scientists-and-engineers-part-3/
     Halide::RDom r(sobel_input);
-    // Halide::Expr e = Halide::maximum(r, sobel_input(r.x, r.y));
-    // int16_t max_input = Halide::cast<int16_t>(e(0,0));
-
-    // Follow algo described in http://patrick-fuller.com/gradients-image-processing-for-scientists-and-engineers-part-3/
+     
     Halide::Func maxpix, minpix, luminosity, mag, luminosity_fn_uint8, mag_uint8;
+
+    // calculate the {min,max} luminosity values of the original grayscale image
     Halide::Image<int32_t> max_out, min_out;
-    maxpix(x) = 0;
-    minpix(x) = 0;
+    maxpix(x) = 0; minpix(x) = 0;
     maxpix(0) = max(sobel_input(r.x, r.y), maxpix(0));
     minpix(0) = min(sobel_input(r.x, r.y), minpix(0));
     max_out = maxpix.realize(1);
     min_out = minpix.realize(1);
-    printf("%d %d\n", max_out(0), min_out(0));
+    
+    // calculate the magnitude of Gx, Gy
     mag = magnitude(sobel.first, sobel.second);
-    //mag_uint8(x,y) = Halide::cast<uint8_t>(mag(x,y));
+    // scale the magnitude by the luminosity range 
     luminosity(x,y) = 255.0f * ((mag(x,y)-min_out(0)) / (max_out(0)-min_out(0)));
-    luminosity_fn_uint8(x,y) = Halide::cast<uint8_t>(luminosity(x,y));
+    luminosity_fn_uint8(x,y) = AS_UINT8(luminosity(x,y));
     luminosity_fn_uint8.realize(sobel_output);
     save(sobel_output, "output/sobel_mag.png");
+
+    printf("%s DONE\n", __func__);
 }
 
 const char* const TEST_OUTPUT = "output";
@@ -103,10 +78,10 @@ void openvx_example(Halide::Image<uint8_t> input) {
 
     Halide::Func gaussian_3x3_fn = gaussian_3x3(padded);
     Halide::Func gaussian_3x3_fn_uint8;
-    gaussian_3x3_fn_uint8(x,y,c) = Halide::cast<uint8_t>(gaussian_3x3_fn(x,y,c));
+    gaussian_3x3_fn_uint8(x,y,c) = AS_UINT8(gaussian_3x3_fn(x,y,c));
     gaussian_3x3_fn_uint8.realize(output);
     save(output, "output/gaussian_3x3.png");
-#if 0
+
     Halide::Func erode_3x3_fn = erode_3x3(padded);
     erode_3x3_fn.realize(output);
     save(output, "output/erode_3x3.png");
@@ -121,10 +96,9 @@ void openvx_example(Halide::Image<uint8_t> input) {
 
     Halide::Func gaussian_5x5_fn = gaussian_5x5(padded);
     Halide::Func gaussian_5x5_fn_uint8;
-    gaussian_5x5_fn_uint8(x,y,c) = Halide::cast<uint8_t>(gaussian_5x5_fn(x,y,c));
+    gaussian_5x5_fn_uint8(x,y,c) = AS_UINT8(gaussian_5x5_fn(x,y,c));
     gaussian_5x5_fn_uint8.realize(output);
     save(output, "output/gaussian_5x5.png");
-#endif 
 
 #if 0
     Halide::Func integral_fn = integral_image(padded);
@@ -137,11 +111,11 @@ void openvx_example(Halide::Image<uint8_t> input) {
     Halide::Func luma;
     luma = rgb2luma(padded);
     Halide::Func luma_fn_uint8;
-    luma_fn_uint8(x,y,c) = Halide::cast<uint8_t>(luma(x,y,c));
+    luma_fn_uint8(x,y,c) = AS_UINT8(luma(x,y,c));
     luma_fn_uint8.realize(output);
     save(output, "output/luma.png");
     
-    printf("openvx_example DONE\n");
+    printf("%s DONE\n", __func__);
 }
 
 void cv_example(Halide::Image<uint8_t> input) {
@@ -153,17 +127,17 @@ void cv_example(Halide::Image<uint8_t> input) {
 
     std::pair<Halide::Func, Halide::Func> scharr = scharr_3x3(padded, true);
     Halide::Func gx, gy;
-    gx(x,y) = Halide::cast<uint8_t>(scharr.first(x,y));
-    gy(x,y) = Halide::cast<uint8_t>(scharr.second(x,y));
+    gx(x,y) = AS_UINT8(scharr.first(x,y));
+    gy(x,y) = AS_UINT8(scharr.second(x,y));
     gx.realize(output);
     save(output, "output/scharr_gx.png");
     gy.realize(output);
     save(output, "output/scharr_gy.png");
+
+    printf("%s DONE\n", __func__);
 }
 
 int main(int argc, char **argv) {
-
-    random_musings();
 
     Halide::Image<uint8_t> input = load<uint8_t>("images/rgb.png");
     Halide::RDom r(input);
@@ -179,6 +153,7 @@ int main(int argc, char **argv) {
 
     Halide::Image<uint8_t> cv_input = load<uint8_t>("images/bikesgray-wikipedia.png");
     cv_example(cv_input);
+    sobel_example();
 
     return 0;
 }
