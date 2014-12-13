@@ -16,7 +16,7 @@ enum interpolation_type {
 
 Halide::Func scale(interpolation_type interpolation);
 std::pair<Halide::Func, Halide::Func> sobel_3x3(Halide::Func input, bool grayscale = false);
-Halide::Func gaussian_3x3(Halide::Func input);
+Halide::Func gaussian_3x3(Halide::Func input, bool grayscale = false);
 Halide::Func gaussian_5x5(Halide::Func input);
 Halide::Func erode_3x3(Halide::Func input);
 Halide::Func dilate_3x3(Halide::Func input);

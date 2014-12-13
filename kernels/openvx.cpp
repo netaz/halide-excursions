@@ -53,7 +53,7 @@ std::pair<Halide::Func, Halide::Func> sobel_3x3(Halide::Func input, bool graysca
 //         1  2  1
 //
 // https://www.khronos.org/registry/vx/specs/1.0/html/d6/d58/group__group__vision__function__gaussian__image.html
-Halide::Func gaussian_3x3(Halide::Func input) {
+Halide::Func gaussian_3x3(Halide::Func input, bool grayscale) {
     Halide::Func k, gaussian;
     Halide::RDom r(-1,3,-1,3);
     Halide::Var x,y,c;
@@ -63,8 +63,13 @@ Halide::Func gaussian_3x3(Halide::Func input) {
     k(-1, 0) = 2;    k(0, 0) = 4;    k(1, 0) = 2;
     k(-1, 1) = 1;    k(0, 1) = 2;    k(1, 1) = 1;
 
-    gaussian(x,y,c) = sum(input(x+r.x, y+r.y, c) * k(r.x, r.y));
-    gaussian(x,y,c) /= 16;
+    if (grayscale) {
+        gaussian(x,y) = sum(input(x+r.x, y+r.y) * k(r.x, r.y));
+        gaussian(x,y) /= 16;
+    } else {
+        gaussian(x,y,c) = sum(input(x+r.x, y+r.y, c) * k(r.x, r.y));
+        gaussian(x,y,c) /= 16;
+    }
 
     return gaussian;
 }
@@ -128,7 +133,7 @@ Halide::Func box_3x3(Halide::Func input) {
     box(x,y,c) /= 9;
     return box;
 }
-
+    
 // Per OpenVX
 // https://www.khronos.org/registry/vx/specs/1.0/html/d0/d7b/group__group__vision__function__integral__image.html
 // TODO: this is currently incorrect
