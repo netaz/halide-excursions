@@ -4,8 +4,10 @@
 #include "Halide.h"
 #include "stdio.h"
 
+// I can't decide if using these macros makes the code more readable or more obscure
 #define AS_UINT8(expr)             (Halide::cast<uint8_t>(min(expr, 255)))
 #define TO_2D_UINT8_LAMBDA(func)   (lambda(x,y,Halide::cast<uint8_t>(min(func(x,y), 255))))
+#define TO_3D_UINT8_LAMBDA(func)   (lambda(x,y,c,Halide::cast<uint8_t>(min(func(x,y,c), 255))))
 
 // TODO: this function assumes printf is used for user i/o
 template <typename T>
