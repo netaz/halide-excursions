@@ -189,15 +189,23 @@ void canny_example() {
 
 int main(int argc, char **argv) {
 
-    // Halide::Image<uint8_t> input = load<uint8_t>("images/rgb.png");
-    // Halide::RDom r(input);
-    // Halide::Func producer;
-    // Halide::Var x,y,c;
-    // producer(x,y,c) = input(x,y,c);
+    Halide::Image<uint8_t> input = load<uint8_t>("images/rgb.png");
+    Halide::RDom r(input);
+    Halide::Var x,y,c;
+    Halide::Func padded;
+    padded(x,y,c) = input(clamp(x, 0, input.width()-1), clamp(y, 0, input.height()-1), c);
 
-    // Halide::Func invert_fn = invert<uint8_t>(producer, r);
-    // Halide::Image<uint8_t> output = invert_fn.realize(input.width(), input.height(), input.channels());
-    // save(output, "output/invert.png");
+    Halide::Func invert_fn = invert<uint8_t>(padded, r);
+    Halide::Image<uint8_t> output = invert_fn.realize(input.width(), input.height(), input.channels());
+    save(output, "output/invert.png");
+
+    Halide::Func reflect = reflect_vert(padded, 500, input.width());
+    reflect.realize(output);
+    save(output, "output/reflect.png");
+
+    Halide::Func reflect2 = reflect_vert(padded, 200, input.width());
+    reflect2.realize(output);
+    save(output, "output/reflect2.png");
 
     // openvx_example(input);
 

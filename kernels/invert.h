@@ -27,4 +27,16 @@ Halide::Func invert(Halide::Func input, Halide::RDom r) {
     return invert;
 }
 
+// one-sides (vertical) reflection across the line x=k
+Halide::Func reflect_vert(Halide::Func input, int k, int width) {
+    Halide::Var x,y,c;
+    Halide::Func reflect("reflect");
+
+    if (k>width/2) 
+    	reflect(x,y,c) = select(x<k, input(x,y,c), input(2*k-x, y, c));
+    else
+    	reflect(x,y,c) = select(x>k, input(x,y,c), input(2*k-x, y, c));
+    return reflect;
+}
+
 #endif // __INVERT_H
