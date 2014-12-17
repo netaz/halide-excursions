@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
     Halide::Image<uint8_t> input = load<uint8_t>("images/rgb.png");
     Halide::RDom r(input);
     Halide::Var x,y,c;
-    Halide::Func padded;
+    Halide::Func padded("padded");
     padded(x,y,c) = input(clamp(x, 0, input.width()-1), clamp(y, 0, input.height()-1), c);
 
     Halide::Func invert_fn = invert<uint8_t>(padded, r);
@@ -207,14 +207,35 @@ int main(int argc, char **argv) {
     reflect2.realize(output);
     save(output, "output/reflect2.png");
 
+    double w_scale = 2, h_scale = 2;
+    Halide::Func nn_scale_up = nn_scale(padded, 1/w_scale, 1/h_scale);
+    Halide::Image<uint8_t> output_scaled_up = nn_scale_up.realize(input.width()*w_scale, input.height()*h_scale, input.channels());
+    save(output_scaled_up, "output/nn_scale_up.png");
+
+    w_scale = 0.5f, h_scale = 0.5f;
+    Halide::Func nn_scale_down = nn_scale(padded, 1/w_scale, 1/h_scale);
+    Halide::Image<uint8_t> output_scaled_down = nn_scale_down.realize(input.width()*w_scale, input.height()*h_scale, input.channels());
+    save(output_scaled_down, "output/nn_scale_down.png");
+
+    Halide::Func bilinear_scale_down = bilinear_scale(padded, 1/w_scale, 1/h_scale);
+    bilinear_scale_down.realize(output_scaled_down);
+    save(output_scaled_down, "output/bilinear_scale_down.png");   
+
+    w_scale = 2, h_scale = 2;
+    Halide::Func bilinear_scale_up = bilinear_scale(padded, 1/w_scale, 1/h_scale);
+    bilinear_scale_up.realize(output_scaled_up);
+    save(output_scaled_up, "output/bilinear_scale_up.png");   
+
     // openvx_example(input);
 
     // Halide::Image<uint8_t> cv_input = load<uint8_t>("images/bikesgray-wikipedia.png");
     // cv_example(cv_input);
     // sobel_example();
     // prewitt_example();
-    canny_example();
+    //canny_example();
 
     return 0;
 }
+
+
 
