@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
     reflect2.realize(output);
     save(output, "output/reflect2.png");
 
-    double w_scale = 2, h_scale = 2;
+    float w_scale = 2, h_scale = 2;
     Halide::Func nn_scale_up = nn_scale(padded, 1/w_scale, 1/h_scale);
     Halide::Image<uint8_t> output_scaled_up = nn_scale_up.realize(input.width()*w_scale, input.height()*h_scale, input.channels());
     save(output_scaled_up, "output/nn_scale_up.png");
@@ -225,6 +225,18 @@ int main(int argc, char **argv) {
     Halide::Func bilinear_scale_up = bilinear_scale(padded, 1/w_scale, 1/h_scale);
     bilinear_scale_up.realize(output_scaled_up);
     save(output_scaled_up, "output/bilinear_scale_up.png");   
+
+    float gamma = 5.0f;
+    Halide::Func fast_unsharp = fast_unsharp_mask(padded, gamma);
+    TO_3D_UINT8_LAMBDA(fast_unsharp).realize(output);
+    save(output, "output/fast_unsharp.png");       
+
+    Halide::Image<uint8_t> gray_output(input.width(), input.height());
+    Halide::Func luma("lluma");
+    luma = rgb_extract_luma(padded);
+    Halide::Func unsharp = unsharp_mask(luma, gaussian_3x3(luma, true), gamma, true);
+    TO_2D_UINT8_LAMBDA(unsharp).realize(gray_output);
+    save(gray_output, "output/unsharp.png");       
 
     // openvx_example(input);
 

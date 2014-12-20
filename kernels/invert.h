@@ -69,6 +69,44 @@ Halide::Func bilinear_scale(Halide::Func input, float w_factor, float h_factor) 
     return scale;
 }
 
+// average_mask == low frequency component
+// (input - average_mask) == high frequency component
+// output = gamma * (input - average_mask) + average_mask
+//        = gamma * input + (1-gamma) * average_mask
+// if gamma>1, then high-frequency component is emphasized
+// Handbook of Computer Vision Algorithms in Image Algebra, 2nd Ed - Gerhard X. Ritter, section 2.10
+Halide::Func unsharp_mask(Halide::Func input, Halide::Func avg_mask, float gamma, bool grayscale=false) {
+    Halide::Func output("unsharp_mask_output");
+    Halide::Var x,y,c;
+
+    if (grayscale)
+        output(x,y) = gamma * input(x,y) + (1.0f-gamma) * avg_mask(x,y);
+    else
+        output(x,y,c) = gamma * input(x,y,c) + (1.0f-gamma) * avg_mask(x,y,c);
+    return output;
+}
+
+// This implementation uses an equal weight mean function for the average mask and the unsharp 
+// mask is applied in one go using a convolution with a 3x3 neighborhood
+Halide::Func fast_unsharp_mask(Halide::Func input, float gamma, float grayscale=false) {
+    Halide::Func output("output"),f("convolution");
+    Halide::RDom r(-1,3,-1,3);
+    Halide::Var x,y,c;
+
+    Halide::Expr v = (1.0f-gamma) / 9.0f;
+    Halide::Expr w = (8.0f * gamma + 1.0f) / 9.0f;
+
+    f(x,y) = 0.0f;
+    f(-1,-1) = v;    f(0,-1) = v;    f(1,-1) = v;
+    f(-1, 0) = v;    f(0, 0) = w;    f(1, 0) = v;
+    f(-1, 1) = v;    f(0, 1) = v;    f(1, 1) = v;
+
+    if (grayscale)
+        output(x,y) = sum(input(x+r.x, y+r.y) * f(r.x, r.y));
+    else
+        output(x,y,c) = sum(input(x+r.x, y+r.y, c) * f(r.x, r.y));
+    return output;
+}
 
 /*
 https://staff.fnwi.uva.nl/r.vandenboomgaard/multimedia/labRotation.pdf
