@@ -54,7 +54,7 @@ std::pair<Halide::Func, Halide::Func> sobel_3x3(Halide::Func input, bool graysca
 //
 // https://www.khronos.org/registry/vx/specs/1.0/html/d6/d58/group__group__vision__function__gaussian__image.html
 Halide::Func gaussian_3x3(Halide::Func input, bool grayscale) {
-    Halide::Func k, gaussian;
+    Halide::Func k, gaussian("gaussian_3x3");
     Halide::RDom r(-1,3,-1,3);
     Halide::Var x,y,c;
     
