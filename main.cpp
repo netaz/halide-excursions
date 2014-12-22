@@ -18,6 +18,7 @@ Halide::Func rotate(Halide::Func input, int height) {
     Halide::Var x,y;
 
     rot(x,y) = input(y, (height - 1) - x);
+    return rot;
 }
 
 void sobel_example() {
