@@ -74,6 +74,52 @@ Halide::Func gaussian_3x3(Halide::Func input, bool grayscale) {
     return gaussian;
 }
 
+Halide::Func gaussian_3x3_2(Halide::Func input) {
+    Halide::Func k, gaussian("gaussian_3x3");
+    Halide::Var x,y,c;
+    
+    gaussian(x,y,c) = input(x-1, y-1, c) * 1   + input(x, y-1, c) * 2  + input(x+1, y-1, c) * 1 +
+                      input(x-1, y, c) * 2      + input(x, y, c) * 4     + input(x+1, y, c) * 2 +
+                      input(x-1, y+1, c) * 1  + input(x, y+1, c) * 2 + input(x+1, y+1, c) * 1;
+    gaussian(x,y,c) /= 16;
+    return gaussian;
+}
+
+Halide::Func gaussian_3x3_3(Halide::Func input) {
+    Halide::Func gaussian_x, gaussian_y;
+    Halide::Var x,y,c;
+  
+    gaussian_x(x,y,c) = (input(x-1,y,c) + input(x,y,c) * 2 + input(x+1,y,c))/4;
+    gaussian_y(x,y,c) = (gaussian_x(x,y-1,c)  + gaussian_x(x,y,c) * 2 + gaussian_x(x,y+1,c) )/4;
+
+    return gaussian_y;
+}
+
+Halide::Func gaussian_3x3_4(Halide::Func input) {
+    Halide::Func k, gaussian_x, gaussian_y;
+    Halide::Var x,y,c;
+    Halide::RDom r(-1,3);
+
+    k(x) = 0;
+    k(-1) = 1;    k(0) = 2;    k(1) = 1;
+    gaussian_x(x,y,c) = sum(input(x+r.x, y, c) * k(r)) / 4;
+    gaussian_y(x,y,c) = sum(gaussian_x(x, y+r, c) * k(r)) / 4;
+
+    return gaussian_y;
+}
+
+Halide::Func gaussian_3x3_5(Halide::Func input) {
+    Halide::Func k, gaussian_x, gaussian_y;
+    Halide::Var x,y,c;
+    Halide::RDom r(-1,3);
+
+    k(x) = 0;
+    k(-1) = 1;    k(0) = 2;    k(1) = 1;
+    gaussian_x(x,y,c) += input(x+r.x, y, c) * k(r) / 4;
+    gaussian_y(x,y,c) += gaussian_x(x, y+r, c) * k(r) / 4;
+
+    return gaussian_y;
+}
 // Per OpenVX
 // https://www.khronos.org/registry/vx/specs/1.0/html/d0/d15/group__group__vision__function__gaussian__pyramid.html
 Halide::Func gaussian_5x5(Halide::Func input) {

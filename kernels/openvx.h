@@ -23,4 +23,10 @@ Halide::Func dilate_3x3(Halide::Func input);
 Halide::Func box_3x3(Halide::Func input);
 Halide::Func integral_image(Halide::Func input);
 
+// Alternative implementations of Gaussian 3x3 kernel.  Not useful except for testing if 
+// the algorithm implementation has bearings on the performance
+Halide::Func gaussian_3x3_2(Halide::Func input);
+Halide::Func gaussian_3x3_3(Halide::Func input);
+Halide::Func gaussian_3x3_4(Halide::Func input);
+Halide::Func gaussian_3x3_5(Halide::Func input);
 #endif // __OPENVX_H

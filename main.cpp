@@ -96,18 +96,28 @@ void prewitt_example() {
 const char* const TEST_OUTPUT = "output";
 void openvx_example(Halide::Image<uint8_t> input) {
     Halide::Image<uint8_t> output(input.width(), input.height(), input.channels());
+    Halide::Image<uint8_t> output2(input.width(), input.height(), input.channels());
     Halide::Var x,y,c;
 
-    Halide::Func padded;
+    Halide::Func padded, padded32;
     padded(x,y,c) = input(clamp(x, 0, input.width()-1),
                           clamp(y, 0, input.height()-1),
                           c);
 
-    Halide::Func gaussian_3x3_fn = gaussian_3x3(padded);
+    padded32(x,y,c) = Halide::cast<int32_t>(padded(x,y,c));
+    Halide::Func gaussian_3x3_fn = gaussian_3x3(padded32);
     Halide::Func gaussian_3x3_fn_uint8;
     gaussian_3x3_fn_uint8(x,y,c) = AS_UINT8(gaussian_3x3_fn(x,y,c));
     gaussian_3x3_fn_uint8.realize(output);
     save(output, "output/gaussian_3x3.png");
+
+    TO_3D_UINT8_LAMBDA(gaussian_3x3_2(padded32)).realize(output2);
+    save(output2, "output/gaussian_3x3_2.png");
+    //assert(output == output2);
+    TO_3D_UINT8_LAMBDA(gaussian_3x3_3(padded32)).realize(output);
+    save(output, "output/gaussian_3x3_3.png");
+    TO_3D_UINT8_LAMBDA(gaussian_3x3_5(padded)).realize(output);
+    save(output, "output/gaussian_3x3_5.png");
 
     Halide::Func erode_3x3_fn = erode_3x3(padded);
     erode_3x3_fn.realize(output);
@@ -238,7 +248,7 @@ int main(int argc, char **argv) {
     TO_2D_UINT8_LAMBDA(unsharp).realize(gray_output);
     save(gray_output, "output/unsharp.png");       
 
-    // openvx_example(input);
+    openvx_example(input);
 
     // Halide::Image<uint8_t> cv_input = load<uint8_t>("images/bikesgray-wikipedia.png");
     // cv_example(cv_input);
