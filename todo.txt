@@ -1,11 +1,14 @@
 Infrastructure
 -----------------------------------
--Add proper makefile
+- move to one .h file
+-Add proper makefile (separate library from main exe)
+-Add support for gtest
 -Add scheduling framework
--Add compilation option and linkage
+-Add compilation option and linkage (separate to library and executable)
 -Add textutal description of pipeline?
 -Add debugging framework
-
+-Add command line interface to be able to execute a series of functions
+-Add docygen
 
 -----------------------------------
 - rename kernel directory (it doesn't contain only kernels)
@@ -28,3 +31,5 @@ Infrastructure
 - sobel 7x7 (https://www.khronos.org/registry/vx/specs/1.0/html/d7/d71/group__group__vision__function__canny.html)
 
 Do separable filters perform as well when separated and not-separated (in Halide)? If not, then the claim for algorithm-scheduling independence is false.
+
+How do I express the relationship between two parallel functions?
