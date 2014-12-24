@@ -20,4 +20,10 @@ Halide::Func grad_angle(Halide::Func Gx, Halide::Func Gy);
 Halide::Func grad_direction(Halide::Func Gx, Halide::Func Gy);
 Halide::Func canny_detector(Halide::Func input, bool grayscale = false);
 
+Halide::Func fast_unsharp_mask(Halide::Func input, float gamma, float grayscale=false);
+Halide::Func unsharp_mask(Halide::Func input, Halide::Func avg_mask, float gamma, bool grayscale=false);
+Halide::Func bilinear_scale(Halide::Func input, float w_factor, float h_factor);
+Halide::Func nn_scale(Halide::Func input, float w_factor, float h_factor);
+Halide::Func reflect_vert(Halide::Func input, int k, int width);
+
 #endif // __CV_H

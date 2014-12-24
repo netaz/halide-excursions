@@ -150,3 +150,86 @@ Halide::Func canny_detector(Halide::Func input, bool grayscale) {
     // 4. hysteresis
     return mag;
 }
+
+
+// -------------------------------------------------------------------------------------------------------------
+// one-sides (vertical) reflection across the line x=k
+Halide::Func reflect_vert(Halide::Func input, int k, int width) {
+    Halide::Var x,y,c;
+    Halide::Func reflect("reflect");
+
+    if (k>width/2) 
+        reflect(x,y,c) = select(x<k, input(x,y,c), input(2*k-x, y, c));
+    else
+        reflect(x,y,c) = select(x>k, input(x,y,c), input(2*k-x, y, c));
+    return reflect;
+}
+
+//Halide::Func nn_interpolation()
+// https://www.khronos.org/registry/vx/specs/1.0/html/d1/d26/group__group__vision__function__scale__image.html
+Halide::Func nn_scale(Halide::Func input, float w_factor, float h_factor) {
+    Halide::Func scale("scale");
+    Halide::Var x,y,c;
+    //scale(x,y,c) = input(Halide::cast<int>(x*w_factor), Halide::cast<int>(y*h_factor),c);
+    scale(x,y,c) = input(Halide::cast<int>(((x+0.5f)*w_factor)-0.5f), Halide::cast<int>(((y+0.5f)*h_factor)-0.5f),c);
+    return scale;
+}
+
+// https://www.khronos.org/registry/vx/specs/1.0/html/d1/d26/group__group__vision__function__scale__image.html
+Halide::Func bilinear_scale(Halide::Func input, float w_factor, float h_factor) {
+    Halide::Func scale("scale");
+    Halide::Var x,y,c;
+ 
+    Halide::Expr x_lower = Halide::cast<int>(x * w_factor);
+    Halide::Expr y_lower = Halide::cast<int>(y * h_factor);
+    Halide::Expr s = (x * w_factor) - x_lower;
+    Halide::Expr t = (y * h_factor) - y_lower;
+
+    scale(x,y,c) =  Halide::cast<uint8_t>(
+                    (1-s) * (1-t) * input(x_lower, y_lower+1, c)  +
+                    s * (1-t)     * input(x_lower+1, y_lower, c)  +
+                    (1-s) * t     * input(x_lower, y_lower+1, c)  + 
+                    s * t         * input(x_lower+1, y_lower+1, c)
+                    );
+
+    return scale;
+}
+
+// average_mask == low frequency component
+// (input - average_mask) == high frequency component
+// output = gamma * (input - average_mask) + average_mask
+//        = gamma * input + (1-gamma) * average_mask
+// if gamma>1, then high-frequency component is emphasized
+// Handbook of Computer Vision Algorithms in Image Algebra, 2nd Ed - Gerhard X. Ritter, section 2.10
+Halide::Func unsharp_mask(Halide::Func input, Halide::Func avg_mask, float gamma, bool grayscale) {
+    Halide::Func output("unsharp_mask_output");
+    Halide::Var x,y,c;
+
+    if (grayscale)
+        output(x,y) = gamma * input(x,y) + (1.0f-gamma) * avg_mask(x,y);
+    else
+        output(x,y,c) = gamma * input(x,y,c) + (1.0f-gamma) * avg_mask(x,y,c);
+    return output;
+}
+
+// This implementation uses an equal weight mean function for the average mask and the unsharp 
+// mask is applied in one go using a convolution with a 3x3 neighborhood
+Halide::Func fast_unsharp_mask(Halide::Func input, float gamma, float grayscale) {
+    Halide::Func output("output"),f("convolution");
+    Halide::RDom r(-1,3,-1,3);
+    Halide::Var x,y,c;
+
+    Halide::Expr v = (1.0f-gamma) / 9.0f;
+    Halide::Expr w = (8.0f * gamma + 1.0f) / 9.0f;
+
+    f(x,y) = 0.0f;
+    f(-1,-1) = v;    f(0,-1) = v;    f(1,-1) = v;
+    f(-1, 0) = v;    f(0, 0) = w;    f(1, 0) = v;
+    f(-1, 1) = v;    f(0, 1) = v;    f(1, 1) = v;
+
+    if (grayscale)
+        output(x,y) = sum(input(x+r.x, y+r.y) * f(r.x, r.y));
+    else
+        output(x,y,c) = sum(input(x+r.x, y+r.y, c) * f(r.x, r.y));
+    return output;
+}
