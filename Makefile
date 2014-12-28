@@ -15,8 +15,8 @@ EXAMPLES_DIR = examples
 
 FILTERS_DIR = $(BUILD_DIR)/filters
 FUNCTIONS_SRC_FILES = kernels/openvx.cpp kernels/cv.cpp kernels/color_convert.cpp
-EXAMPLES_SRC_FILES = $(EXAMPLES_DIR)/example1.cpp $(EXAMPLES_DIR)/example2.cpp $(EXAMPLES_DIR)/example3.cpp $(EXAMPLES_DIR)/example4.cpp
-HEADER_FILES = 
+EXAMPLES_SRC_FILES = $(EXAMPLES_DIR)/example1.cpp $(EXAMPLES_DIR)/example2.cpp $(EXAMPLES_DIR)/example3.cpp $(EXAMPLES_DIR)/example4.cpp $(EXAMPLES_DIR)/scheduling_example.cpp
+HEADER_FILES = ./utils/clock.h 
 
 OBJECTS = $(FUNCTIONS_SRC_FILES:%.cpp=$(BUILD_DIR)/%.o)
 HEADERS = $(HEADER_FILES:%.h=src/%.h)
@@ -24,12 +24,12 @@ LIBS = -L$(BIN_DIR)/ -L$(HALIDE_HOME)/bin -lHalide `libpng-config --cflags --ldf
 
 $(BUILD_DIR)/%.o: ./%.cpp ./%.h
 	@-mkdir -p $(BUILD_DIR)/kernels
-	$(CXX) $(CXX_FLAGS) -c $< -Ikernels -I$(HALIDE_HOME)/include $(LIBS) -o $(BUILD_DIR)/$*.o
+	$(CXX) $(CXX_FLAGS) -c $< -I. -Ikernels -I$(HALIDE_HOME)/include $(LIBS) -o $(BUILD_DIR)/$*.o
 
 $(BIN_DIR)/test: main.cpp $(EXAMPLES_SRC_FILES) $(BIN_DIR)/libExcursions.a
 	$(CXX) $(CXX_FLAGS)  $< $(EXAMPLES_SRC_FILES) -I. -I$(HALIDE_HOME)/include $(LIBS) -lExcursions -o $@
 
-$(BIN_DIR)/libExcursions.a: $(OBJECTS)
+$(BIN_DIR)/libExcursions.a: $(OBJECTS) $(HEADER_FILES)
 	$(LD) -r -o  $(BUILD_DIR)/Excursions.o $(OBJECTS)
 	@-mkdir -p $(BIN_DIR)
 	rm -f $(BIN_DIR)/libExcursions.a

@@ -19,6 +19,7 @@ int prewitt_example(int argc, const char **argv);
 int canny_example(int argc, const char **argv);
 int cv_example(int argc, const char **argv);
 int scale_example(int argc, const char **argv);
+int sched_example(int argc, const char **argv);
 
 Halide::Func rotate(Halide::Func input, int height) {
     Halide::Func rot;
@@ -44,6 +45,7 @@ example examples[] = {
     {"canny", canny_example, 1, {"images/bikesgray-wikipedia.png"} },
     {"cv", cv_example, 1, {"images/bikesgray-wikipedia.png"} },
     {"scale", scale_example, 1, {"images/rgb.png"} },
+    {"sched", sched_example, 1, {"images/rgb.png"} },
 };
 
 
@@ -71,6 +73,3 @@ int main(int argc, char **argv) {
 
      return EXIT_SUCCESS;
 }
-
-
-

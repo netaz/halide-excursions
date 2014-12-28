@@ -53,10 +53,10 @@ std::pair<Halide::Func, Halide::Func> sobel_3x3(Halide::Func input, bool graysca
 //         1  2  1
 //
 // https://www.khronos.org/registry/vx/specs/1.0/html/d6/d58/group__group__vision__function__gaussian__image.html
-Halide::Func gaussian_3x3(Halide::Func input, bool grayscale) {
+Halide::Func gaussian_3x3(Halide::Func input, bool grayscale, const Scheduler &s) {
     Halide::Func k, gaussian("gaussian_3x3");
     Halide::RDom r(-1,3,-1,3);
-    Halide::Var x,y,c;
+    Halide::Var x,y,xi,yi,c;
     
     k(x,y) = 0;
     k(-1,-1) = 1;    k(0,-1) = 2;    k(1,-1) = 1;
@@ -64,53 +64,58 @@ Halide::Func gaussian_3x3(Halide::Func input, bool grayscale) {
     k(-1, 1) = 1;    k(0, 1) = 2;    k(1, 1) = 1;
 
     if (grayscale) {
-        gaussian(x,y) = sum(input(x+r.x, y+r.y) * k(r.x, r.y));
-        gaussian(x,y) /= 16;
+        gaussian(x,y) = sum(input(x+r.x, y+r.y) * k(r.x, r.y)) / 16;
+        //gaussian(x,y) /= 16;
     } else {
-        gaussian(x,y,c) = sum(input(x+r.x, y+r.y, c) * k(r.x, r.y));
-        gaussian(x,y,c) /= 16;
+        gaussian(x,y,c) = sum(input(x+r.x, y+r.y, c) * k(r.x, r.y)) / 16;
+        //gaussian(x,y,c) /= 16;
     }
-
-    return gaussian;
-}
-
-Halide::Func gaussian_3x3_2(Halide::Func input) {
-    Halide::Func k, gaussian("gaussian_3x3");
-    Halide::Var x,y,c;
     
-    gaussian(x,y,c) = input(x-1, y-1, c) * 1   + input(x, y-1, c) * 2  + input(x+1, y-1, c) * 1 +
-                      input(x-1, y, c) * 2      + input(x, y, c) * 4     + input(x+1, y, c) * 2 +
-                      input(x-1, y+1, c) * 1  + input(x, y+1, c) * 2 + input(x+1, y+1, c) * 1;
-    gaussian(x,y,c) /= 16;
+    s.schedule(gaussian, x, y);
     return gaussian;
 }
 
-Halide::Func gaussian_3x3_3(Halide::Func input) {
-    Halide::Func gaussian_x, gaussian_y;
+Halide::Func gaussian_3x3_2(Halide::Func input, const Scheduler &s) {
+    Halide::Func k, gaussian("gaussian_3x3");
+    Halide::Var x,y,xi,yi,c;
+    
+    gaussian(x,y,c) = (input(x-1, y-1, c) * 1   + input(x, y-1, c) * 2  + input(x+1, y-1, c) * 1 +
+                       input(x-1, y, c) * 2     + input(x, y, c) * 4    + input(x+1, y, c) * 2 +
+                       input(x-1, y+1, c) * 1   + input(x, y+1, c) * 2  + input(x+1, y+1, c) * 1)/ 16;
+//    gaussian(x,y,c) /= 16;
+    s.schedule(gaussian, x, y);
+    return gaussian;
+}
+
+//Halide::Func gaussian_3x3_3(Halide::Func input, Halide::Var x, Halide::Var y, Halide::Var c, const Scheduler &s) {
+Halide::Func gaussian_3x3_3(Halide::Func input, const Scheduler &s) {
+    Halide::Func gaussian_x("gx"), gaussian_y("gy");
     Halide::Var x,y,c;
   
     gaussian_x(x,y,c) = (input(x-1,y,c) + input(x,y,c) * 2 + input(x+1,y,c))/4;
     gaussian_y(x,y,c) = (gaussian_x(x,y-1,c)  + gaussian_x(x,y,c) * 2 + gaussian_x(x,y+1,c) )/4;
 
+    s.schedule(gaussian_x, gaussian_y, x, y);
     return gaussian_y;
 }
 
-Halide::Func gaussian_3x3_4(Halide::Func input) {
+Halide::Func gaussian_3x3_4(Halide::Func input, const Scheduler &s) {
     Halide::Func k, gaussian_x, gaussian_y;
-    Halide::Var x,y,c;
+    Halide::Var x,y,xi,yi,c;
     Halide::RDom r(-1,3);
 
     k(x) = 0;
     k(-1) = 1;    k(0) = 2;    k(1) = 1;
     gaussian_x(x,y,c) = sum(input(x+r.x, y, c) * k(r)) / 4;
     gaussian_y(x,y,c) = sum(gaussian_x(x, y+r, c) * k(r)) / 4;
-
+    
+    s.schedule(gaussian_x, gaussian_y, x, y);
     return gaussian_y;
 }
 
-Halide::Func gaussian_3x3_5(Halide::Func input) {
+Halide::Func gaussian_3x3_5(Halide::Func input, const Scheduler &s) {
     Halide::Func k, gaussian_x, gaussian_y;
-    Halide::Var x,y,c;
+    Halide::Var x,y,xi,yi,c;
     Halide::RDom r(-1,3);
 
     k(x) = 0;
@@ -118,6 +123,7 @@ Halide::Func gaussian_3x3_5(Halide::Func input) {
     gaussian_x(x,y,c) += input(x+r.x, y, c) * k(r) / 4;
     gaussian_y(x,y,c) += gaussian_x(x, y+r, c) * k(r) / 4;
 
+    s.schedule(gaussian_x, gaussian_y, x, y);
     return gaussian_y;
 }
 // Per OpenVX
