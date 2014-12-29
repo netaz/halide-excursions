@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <string>
 
+#define __DEBUG printf
+
 #ifdef _WIN32
 extern "C" bool QueryPerformanceCounter(uint64_t *);
 extern "C" bool QueryPerformanceFrequency(uint64_t *);
@@ -35,10 +37,9 @@ double current_time() {
 #endif
 
 
-struct timings {
-    std::vector<double> samples; 
-    double min, max;
-    timings(){}
+class timings {
+public:
+    timings(const std::string desc = "") : desc(desc) {}
 
     void add(double duration) {
         samples.push_back(duration);
@@ -50,22 +51,22 @@ struct timings {
 
         auto imax = std::max_element(samples.begin(), samples.end());
         auto imin = std::min_element(samples.begin(), samples.end());
-        printf("here1-1\n");
+        __DEBUG("here1-1\n");
         samples.erase(imin);
         samples.erase(imax);
-        printf("here1-2\n");
+        __DEBUG("here1-2\n");
         imax = std::max_element(samples.begin(), samples.end());
         imin = std::min_element(samples.begin(), samples.end());
-        printf("here1-2-1\n");
+        __DEBUG("here1-2-1\n");
         samples.erase(imin);
         samples.erase(imax);
-        printf("here1-3\n");
+        __DEBUG("here1-3\n");
         min = *imin;
         max = *imin;
 
         double sum = std::accumulate(samples.begin(), samples.end(), 0.0);
         double mean = sum / samples.size();
-        printf("here1-4\n");
+        __DEBUG("here1-4\n");
 
         std::vector<double> diff(samples.size());
         std::transform(samples.begin(), samples.end(), diff.begin(), std::bind2nd(std::minus<double>(), mean));
@@ -75,18 +76,23 @@ struct timings {
     }
 
     void dump() {
-        printf("Dumping %lu results:\n", samples.size());
         FILE *fd = fopen("dump.txt", "w");
         assert(fd);
+        fprintf(fd, "%s - %lu\n", desc.c_str(), samples.size());
         for (size_t i=0; i<samples.size(); i++) 
             fprintf(fd, "%f\n", samples[i]);
-        printf("here1\n");
+        __DEBUG("here1\n");
         double dev = 0;
         double m = mean(dev);
-        printf("here2\n");
+        __DEBUG("here2\n");
         fprintf(fd, "mean=%f std_dev=%f\n", m, dev);
         fclose(fd);
     }
+
+private:
+    std::vector<double> samples; 
+    double min, max;
+    std::string desc;
 };
 
 struct interval {

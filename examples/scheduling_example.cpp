@@ -169,7 +169,7 @@ int jit_sched_example(int argc, const char **argv) {
     example.compile_jit(target);
 
     {    
-        timings t;
+        timings t(example.name());
         for (int i=0; i<50; i++) {
             interval i(t);
             example.realize(output);
