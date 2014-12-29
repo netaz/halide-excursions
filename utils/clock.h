@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <string>
 
 #ifdef _WIN32
 extern "C" bool QueryPerformanceCounter(uint64_t *);
@@ -32,48 +33,6 @@ double current_time() {
     }
 }
 #endif
-
-#define NTRIES 10
-#include "assert.h"
-double now() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    static bool first_call = true;
-    static time_t first_sec = 0;
-    if (first_call) {
-        first_call = false;
-        first_sec = tv.tv_sec;
-    }
-    assert(tv.tv_sec >= first_sec);
-    return (tv.tv_sec - first_sec) + (tv.tv_usec / 1000000.0);
-}
-#include <math.h> 
-struct Stats
-{
-  float min;
-  float max;
-  float elapsed[NTRIES];
-
-  Stats(){
-    min =  std::numeric_limits<float>::max();
-    max = -std::numeric_limits<float>::max();
-    for (int k=0; k<NTRIES; k++) elapsed[k] = std::numeric_limits<float>::max();;
-  }
-};
-
-#define TIME_START(st)                                \
-{                                                     \
-  double start = now();                               \
-  {
-
-#define TIME_END(st, i)                               \
-  }                                                   \
-  double end   = now();                               \
-                                                      \
-  st.measurements[i] = end - start;                        \
-  if (st.measurements[i] < st.min) st.min = st.measurements[i]; \
-  if (st.measurements[i] > st.max) st.max = st.measurements[i]; \
-}
 
 
 struct timings {
