@@ -1,4 +1,4 @@
-#include "openvx.h"
+#include "excursions.h"
 
 // Per OpenVX
 Halide::Func scale(interpolation_type interpolation) {

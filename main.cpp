@@ -4,14 +4,6 @@
 
 #include <Halide.h>
 #include <string>
-#include "kernels/invert.h"
-#include "kernels/openvx.h"
-#include "kernels/cv.h"
-#include "kernels/color_convert.h"
-#include "utils/utils.h"
-
-using Halide::Image;
-#include "utils/image_io.h"
 
 int openvx_example(int argc, const char **argv);
 int sobel_example(int argc, const char **argv);

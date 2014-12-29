@@ -1,9 +1,6 @@
 #include <Halide.h>
 #include <string>
-#include "kernels/invert.h"
-#include "kernels/openvx.h"
-#include "kernels/cv.h"
-#include "kernels/color_convert.h"
+#include "excursions.h"
 #include "utils/utils.h"
 
 

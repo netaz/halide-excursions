@@ -1,4 +1,4 @@
-#include "color_convert.h"
+#include "excursions.h"
 
 // Given a 3-channel RGB input, return a function with a single
 // channel - the luminance channel (grayscale)

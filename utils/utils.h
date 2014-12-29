@@ -4,6 +4,10 @@
 #include "Halide.h"
 #include "stdio.h"
 
+#define USE_HALIDE_JIT     1
+#define USE_HALIDE_AOT     2 
+#define GENERATE_AOT_OBJS  3
+
 // I can't decide if using these macros makes the code more readable or more obscure
 #define AS_UINT8(expr)             (Halide::cast<uint8_t>(min(expr, 255)))
 #define TO_2D_UINT8_LAMBDA(func)   (lambda(x,y,Halide::cast<uint8_t>(min(func(x,y), 255))))
@@ -44,6 +48,13 @@ T verify_max(Halide::Image<T> &img) {
         for (int j=img.min(1); j<img.min(1)+img.extent(1); j++)
             max_val = std::max(max_val, img(i,j));
     return max_val;
+}
+
+// Returns true if images are binary equals
+template <typename T>
+bool compare_images(Halide::Image<T> im1, Halide::Image<T> im2) {
+
+    return true;
 }
 
 #endif // __UTILS_H

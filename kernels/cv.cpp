@@ -1,5 +1,4 @@
-#include "cv.h"
-#include "openvx.h"
+#include "excursions.h"
 
 // Scharr operator
 // Computes x,y gradients
