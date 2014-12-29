@@ -13,8 +13,8 @@ BUILD_DIR = build
 BIN_DIR = bin
 EXAMPLES_DIR = examples
 GEN_DIR = generated
-
-FUNCS_SRC = kernels/cv.cpp kernels/color_convert.cpp kernels/openvx.cpp
+FUNCS_DIR = functions
+FUNCS_SRC = $(FUNCS_DIR)/cv.cpp $(FUNCS_DIR)/color_convert.cpp $(FUNCS_DIR)/openvx.cpp
 HEADER_FILES = ./utils/clock.h 
 
 FUNCS_OBJ = $(FUNCS_SRC:%.cpp=$(BUILD_DIR)/%.o)
@@ -29,8 +29,8 @@ USE_HALIDE_JIT    = 1
 USE_HALIDE_AOT	  = 2 
 GENERATE_AOT_OBJS = 3
 
-$(BUILD_DIR)/kernels/%.o: kernels/%.cpp
-	@-mkdir -p $(BUILD_DIR)/kernels
+$(BUILD_DIR)/$(FUNCS_DIR)/%.o: $(FUNCS_DIR)/%.cpp
+	@-mkdir -p $(BUILD_DIR)/$(FUNCS_DIR)
 	$(CXX) $(CXX_FLAGS) -c $< -I. -I$(HALIDE_HOME)/include $(LIBS) -o $@
 
 #$(BUILD_DIR)/examples/%.o: examples/%.cpp

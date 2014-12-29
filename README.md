@@ -19,8 +19,10 @@ To build examples using AOT (ahead-of-time) compilation:
 	$ LD_LIBRARY_PATH=$HALIDE_HOME/bin bin/aot_test <test-name>
 
 To generate the Halide functions object files (AoT objects):
-	$  make bin/generate_aot
+	$ make bin/generate_aot
 
+To build everything:
+	$ make all
 
 Guidelines for new functions (BKMs)
 ===================================
