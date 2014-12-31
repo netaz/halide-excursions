@@ -11,7 +11,7 @@ CXX_FLAGS += -std=c++0x
 
 BUILD_DIR = build
 BIN_DIR = bin
-EXAMPLES_DIR = examples
+SAMPLES_DIR = samples
 GEN_DIR = generated
 FUNCS_DIR = functions
 FUNCS_SRC = $(FUNCS_DIR)/cv.cpp $(FUNCS_DIR)/color_convert.cpp $(FUNCS_DIR)/openvx.cpp
@@ -22,8 +22,9 @@ HEADERS = $(HEADER_FILES:%.h=src/%.h)
 LIBS = -L$(BIN_DIR)/ -L$(HALIDE_HOME)/bin -lHalide `libpng-config --cflags --ldflags` -lpthread -ldl -lz
 
 # Example code
-EXAMPLES_SRC_FILES = $(EXAMPLES_DIR)/example1.cpp $(EXAMPLES_DIR)/example2.cpp $(EXAMPLES_DIR)/example3.cpp $(EXAMPLES_DIR)/example4.cpp $(EXAMPLES_DIR)/scheduling_example.cpp
-EXAMPLES_AOT_FILES = $(GEN_DIR)/halide_sched_example.o
+SAMPLES_SRC_FILES = $(SAMPLES_DIR)/sample1.cpp $(SAMPLES_DIR)/sample2.cpp \
+					$(SAMPLES_DIR)/sample3.cpp $(SAMPLES_DIR)/sample4.cpp $(SAMPLES_DIR)/scheduling_sample.cpp
+SAMPLES_AOT_FILES = $(GEN_DIR)/halide_sched_example.o
 
 USE_HALIDE_JIT    = 1
 USE_HALIDE_AOT	  = 2 
@@ -33,21 +34,21 @@ $(BUILD_DIR)/$(FUNCS_DIR)/%.o: $(FUNCS_DIR)/%.cpp
 	@-mkdir -p $(BUILD_DIR)/$(FUNCS_DIR)
 	$(CXX) $(CXX_FLAGS) -c $< -I. -I$(HALIDE_HOME)/include $(LIBS) -o $@
 
-#$(BUILD_DIR)/examples/%.o: examples/%.cpp
-#	@-mkdir -p $(BUILD_DIR)/examples
+#$(BUILD_DIR)/samples/%.o: samples/%.cpp
+#	@-mkdir -p $(BUILD_DIR)/samples
 #	$(CXX) $(CXX_FLAGS) -c $< -I. -I$(HALIDE_HOME)/include $(LIBS) -o $@
 
-$(BIN_DIR)/test: main.cpp $(EXAMPLES_SRC_FILES) $(BIN_DIR)/libExcursions.a
-	$(CXX) $(CXX_FLAGS)  $< -DUSAGE=$(USE_HALIDE_JIT) $(EXAMPLES_SRC_FILES) -I. -I$(HALIDE_HOME)/include $(LIBS) -lExcursions -o $@
+$(BIN_DIR)/test: main.cpp $(SAMPLES_SRC_FILES) $(BIN_DIR)/libExcursions.a
+	$(CXX) $(CXX_FLAGS)  $< -DUSAGE=$(USE_HALIDE_JIT) $(SAMPLES_SRC_FILES) -I. -I$(HALIDE_HOME)/include $(LIBS) -lExcursions -o $@
 
 # This rule first generates the Halide AOT objects, then links with them and runs the tests
-$(BIN_DIR)/test_aot: main.cpp $(EXAMPLES_SRC_FILES) $(BIN_DIR)/libExcursions.a $(BIN_DIR)/generate_aot
-	$(CXX) $(CXX_FLAGS)  $< -DUSAGE=$(USE_HALIDE_AOT) $(EXAMPLES_SRC_FILES) -I. -I$(HALIDE_HOME)/include $(LIBS) -lExcursions $(EXAMPLES_AOT_FILES) -o $@
+$(BIN_DIR)/test_aot: main.cpp $(SAMPLES_SRC_FILES) $(BIN_DIR)/libExcursions.a $(BIN_DIR)/generate_aot
+	$(CXX) $(CXX_FLAGS)  $< -DUSAGE=$(USE_HALIDE_AOT) $(SAMPLES_SRC_FILES) -I. -I$(HALIDE_HOME)/include $(LIBS) -lExcursions $(SAMPLES_AOT_FILES) -o $@
 
 # This rule generates Ahead-of-Time (AoT) code (static compilation of Halide functions)
 # The objects and headers are placed in $(GEN_DIR)
-$(BIN_DIR)/generate_aot: $(EXAMPLES_SRC_FILES) $(BIN_DIR)/libExcursions.a
-	$(CXX) $(CXX_FLAGS) $< -DUSAGE=$(GENERATE_AOT_OBJS) $(EXAMPLES_DIR)/scheduling_example.cpp -I. -I$(HALIDE_HOME)/include -I$(GEN_DIR) $(LIBS) -lExcursions -o $@
+$(BIN_DIR)/generate_aot: $(SAMPLES_SRC_FILES) $(BIN_DIR)/libExcursions.a
+	$(CXX) $(CXX_FLAGS) $< -DUSAGE=$(GENERATE_AOT_OBJS) $(SAMPLES_DIR)/scheduling_sample.cpp -I. -I$(HALIDE_HOME)/include -I$(GEN_DIR) $(LIBS) -lExcursions -o $@
 	@-mkdir -p $(GEN_DIR)
 	@-cd $(GEN_DIR)
 	LD_LIBRARY_PATH=$(HALIDE_HOME)/bin $(BIN_DIR)/generate_aot $(GEN_DIR)

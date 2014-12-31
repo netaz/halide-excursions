@@ -81,6 +81,11 @@ public:
         case 7:
             f.tile(x, y, xi, yi, 256, 32).vectorize(xi, 4).parallel(y);
             break;
+        case 8:
+            //f.store_root().split(x, x, xi, 32).vectorize(xi, 4).parallel(y);
+            // f.store_root().split(x, x, xi, 256).vectorize(xi, 4).parallel(y);  -- increasing the split size doesn't help much
+            f.split(x, x, xi, 256).vectorize(xi, 4).parallel(y);
+            break;
         }
             
     }    virtual void schedule(Halide::Func fx, Halide::Func fy, Halide::Var x, Halide::Var y) const {}
@@ -101,8 +106,8 @@ static Halide::Func createAndSchedulePipeline(Halide::Image<uint8_t> input) {
     padded32(x,y,c) = Halide::cast<int32_t>(padded(x,y,c));
 
     //Halide::Func test = gaussian_3x3_3(padded32, x,y, c, Separable2dConvolutionSched());
-    //Halide::Func test = gaussian_3x3_3(padded32, Separable2dConvolutionSched(4));
-    Halide::Func test = gaussian_3x3_2(padded32, ConvolutionSched(6));
+    Halide::Func test = gaussian_3x3_3(padded32, Separable2dConvolutionSched(4));
+    //Halide::Func test = gaussian_3x3_2(padded32, ConvolutionSched(8));
     //Halide::Func test = gaussian_3x3_4(padded32, Separable2dConvolutionSched(4));
     
 #define PERFORM_EXTERNAL_CAST
