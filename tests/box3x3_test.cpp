@@ -91,7 +91,6 @@ bool box_3x3__test_3d() {
 TEST(box3x3Test, Normal) {
   EXPECT_EQ(true,box_3x3__test_3d());
   EXPECT_EQ(true,box_3x3__test());
-
 }
 
 #include <stdio.h>

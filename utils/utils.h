@@ -85,20 +85,6 @@ void dump_3x3_neghiborhood(Halide::Image<T> &img, int x, int y) {
                                 img(x-1,y+1), img(x,y+1), img(x+1,y+1));
 }
 
-// template <typename T>
-// void dump_3x3_neghiborhood(Halide::Image<T> &img, int x, int y, const excursions::clammper<T> &cl) {
-//     printf("\n%3d %3d %3d\n"
-//              "%3d %3d %3d\n"
-//              "%3d %3d %3d\n\n", img(cl(x-1,y-1)), img(cl(x,y-1)), img(cl(x+1,y-1)), 
-//                                 img(cl(x-1,y)),   img(cl(x,y)),   img(cl(x+1,y)), 
-//                                 img(cl(x-1,y+1)), img(cl(x,y+1)), img(cl(x+1,y+1)));
-//         printf("\n%3d %3d %3d\n"
-//              "%3d %3d %3d\n"
-//              "%3d %3d %3d\n\n", cl(x-1,y-1), (cl(x,y-1)), (cl(x+1,y-1)), 
-//                                 cl(x-1,y),   (cl(x,y)),   (cl(x+1,y)), 
-//                                 cl(x-1,y+1), (cl(x,y+1)), (cl(x+1,y+1)));
-// }
-
 template <typename T>
 void dump_3x3_neghiborhood(const excursions::clammper<T> &cl, int x, int y) {
         printf("\n%3d %3d %3d\n"
@@ -120,9 +106,9 @@ template <typename T>
 void dump_3x3_neghiborhood(Halide::Image<T> &img, int x, int y, int c, const excursions::clammper<T> &cl) {
     printf("\n%3d %3d %3d\n"
              "%3d %3d %3d\n"
-             "%3d %3d %3d\n\n", img(cl(x-1,y-1,c)), img(cl(x,y-1,c)), img(cl(x+1,y-1,c)), 
-                                img(cl(x-1,y,c)),   img(cl(x,y,c)),   img(cl(x+1,y,c)), 
-                                img(cl(x-1,y+1,c)), img(cl(x,y+1,c)), img(cl(x+1,y+1,c)));
+             "%3d %3d %3d\n\n", cl(x-1,y-1,c), cl(x,y-1,c), cl(x+1,y-1,c), 
+                                cl(x-1,y,c),   cl(x,y,c),   cl(x+1,y,c), 
+                                cl(x-1,y+1,c), cl(x,y+1,c), cl(x+1,y+1,c));
 }
 
 // This is useful for inializing test images
