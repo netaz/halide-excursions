@@ -176,13 +176,16 @@ Halide::Func dilate_3x3(Halide::Func input) {
 // Per OpenVX 
 // Computes a Box filter over a window of the input image.
 // https://www.khronos.org/registry/vx/specs/1.0/html/da/d7c/group__group__vision__function__box__image.html
-Halide::Func box_3x3(Halide::Func input) {
+Halide::Func box_3x3(Halide::Func input, bool grayscale) {
     Halide::Func box("box");
     Halide::RDom r(-1,3,-1,3);
     Halide::Var x,y,c;
 
-    box(x,y,c) = Halide::sum(input(x+r.x, y+r.y, c));
-    box(x,y,c) /= 9;
+    if (grayscale)
+        box(x,y) = Halide::sum(input(x+r.x, y+r.y)) / 9;
+    else
+        box(x,y,c) = Halide::sum(input(x+r.x, y+r.y, c)) / 9;
+
     return box;
 }
     

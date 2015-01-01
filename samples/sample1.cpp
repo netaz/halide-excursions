@@ -41,7 +41,7 @@ int openvx_example(int argc, const char **argv) {
     dilate_3x3_fn.realize(output);
     save(output, "output/dilate_3x3.png");
 
-    Halide::Func box_3x3_fn = dilate_3x3(padded);
+    Halide::Func box_3x3_fn = box_3x3(padded);
     box_3x3_fn.realize(output);
     save(output, "output/box_3x3.png");
 

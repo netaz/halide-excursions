@@ -20,7 +20,7 @@ Halide::Func gaussian_3x3(Halide::Func input, bool grayscale = false, const Sche
 Halide::Func gaussian_5x5(Halide::Func input);
 Halide::Func erode_3x3(Halide::Func input);
 Halide::Func dilate_3x3(Halide::Func input);
-Halide::Func box_3x3(Halide::Func input);
+Halide::Func box_3x3(Halide::Func input, bool grayscale = false);
 Halide::Func integral_image(Halide::Func input);
 
 // Alternative implementations of Gaussian 3x3 kernel.  Not useful except for testing if 
